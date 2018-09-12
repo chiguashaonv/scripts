@@ -1,22 +1,25 @@
 # Calculate correlation between the two variables
 # cor <- cor.test(adra$gene, adra$beta,method="spearman")
 
-plotScatterBoxplot <- function(data,coefficient,Q){
-  coefficient <- paste0("coefficient = ",coefficient)
-  Q <- paste0("Q = ",Q)
-  p1 <- ggplot(data, aes(x=data$xvalues, y=data$gene)) +
+plotScatterBoxplot <- function(data,ylab){
+  cor.res=cor.test(data[,1],data[,2],method="pearson")
+  coefficient <- paste0("cor = ",signif(cor.res$estimate,digits = 2))
+  Q <- paste0("P = ",signif(cor.res$p.value,digits=2))
+  p1 <- ggplot(na.omit(data), aes(x=xvalues, y=gene)) +
     geom_jitter(aes(color=factor(subtype)),pch = 20, size = 4,position = position_jitter(width = 0.1, height = 0.1)) +
     geom_smooth(aes(color="grey"),method="lm")+
-    scale_x_continuous(expand = c(0, 0)) +
-    scale_y_continuous(expand = c(0, 0)) +
-    geom_text(y = max(data$gene), x = max(data$xvalues)-0.1,label = coefficient, size = 4) +
-    geom_text(y = max(data$gene)-1, x= max(data$xvalues)-0.1,label = Q, size = 4) +
+    scale_x_continuous(expand = c(0, 2)) +
+    scale_y_continuous(expand = c(0, 2)) +
+    geom_text(y = max(na.omit(data)$gene), x = max(na.omit(data)$xvalues)-5,label = coefficient, size = 4) +
+    geom_text(y = max(na.omit(data)$gene)-2, x= max(na.omit(data)$xvalues)-5,label = Q, size = 4) +
+    # geom_text(y = max(gene), x = max(xvalues)-0.1,label = coefficient, size = 4) +
+    # geom_text(y = max(gene)-1, x= max(xvalues)-0.1,label = Q, size = 4) +
     # geom_rect(ymin = 11, ymax = 12, xmin = 0.6, xmax = 0.9, colour = "black", fill = NA) +
     # expand_limits(x = c(-0.75, 10.75), y = c(-0.075, 1.075)) +
-    expand_limits(y = c(min(data$gene) - 0.1 * diff(range(data$gene)), max(data$gene) + 0.1 * diff(range(data$gene)))) +
-    expand_limits(x = c(min(data$xvalues) - 0.1 * diff(range(data$xvalues)), max(data$xvalues) + 0.1 * diff(range(data$xvalues)))) +
-    scale_color_manual(values=c("#C2C2C2","#EB6363","#1EB5B8"))+
-    labs(x="Normalized Smoking Activity",y="Gene expression")+
+    expand_limits(y = c(min(na.omit(data)$gene) - 0.1 * diff(range(na.omit(data)$gene)), max(na.omit(data)$gene) + 0.1 * diff(range(na.omit(data)$gene)))) +
+    expand_limits(x = c(min(na.omit(data)$xvalues) - 0.1 * diff(range(na.omit(data)$xvalues)), max(na.omit(data)$xvalues) + 0.1 * diff(range(na.omit(data)$xvalues)))) +
+    scale_color_manual(values=c("#7bbda2","#ee875c","#C2C2C2","#97a4d0","#1678b5"))+
+    labs(x="Latency 1st Entrance to Target",y=paste(ylab,"gene expression"))+
     theme_bw() +
     theme(panel.grid.minor = element_blank(),
       legend.position="none",
@@ -37,25 +40,29 @@ plotScatterBoxplot <- function(data,coefficient,Q){
   # axis.text = element_text(margin=unit(0, "lines")),
   axis.ticks.length = unit(0, "cm"))
 
-  p2 <- ggplot(data, aes(x = factor(subtype), y = data$xvalues)) +
-    geom_boxplot(aes(x=factor(subtype),y=data$xvalues,fill=factor(subtype)),width = .8, outlier.colour = NA) +
-    # geom_jitter(pch = 20, size = 1, colour = "red", alpha = .3,position = position_jitter(width = 0.15, height = 0.15)) +
-    scale_y_continuous(expand = c(0, 0)) +
-    # expand_limits(x = c(-0.75, 10.75))  +
-    expand_limits(x = c(min(data$xvalues) - 0.1 * diff(range(data$xvalues)), max(data$xvalues) + 0.1 * diff(range(data$xvalues)))) +
-    scale_fill_manual(values=c("#EB6363","#1EB5B8"))+
-    coord_flip() +
-    theme_bw() +
-    theme_remove_all +
-    theme(plot.margin= unit(c(0.5, 0, 0, 0.5), "lines"))
-
-  p3 <- ggplot(data, aes(x = factor(subtype), y = data$gene)) +
-     geom_boxplot(aes(x=factor(subtype),y=gene,fill=factor(subtype)),width = .8, outlier.colour = NA) +
+  p2 <- ggplot(na.omit(data), aes(x = factor(subtype), y = xvalues)) +
+     geom_boxplot(aes(x=factor(subtype),y=xvalues,fill=factor(subtype)),width = .8, outlier.colour = NA) +
+     geom_beeswarm(size=1)+
+     stat_compare_means(comparisons=list(c("DS_PBS","DS_VPA")))+
      # geom_jitter(pch = 20, size = 1, colour = "red", alpha = .3,position = position_jitter(width = 0.15, height = 0.15)) +
-     scale_y_continuous(expand = c(0, 0)) +
+     scale_y_continuous(expand = c(0, 2)) +
      # expand_limits(y = c(-0.75, 10.75))  +
-     expand_limits(y = c(min(data$gene) - 0.1 * diff(range(data$gene)), max(data$gene) + 0.1 * diff(range(data$gene)))) +
-     scale_fill_manual(values=c("#EB6363","#1EB5B8"))+
+     expand_limits(y = c(min(na.omit(data)$xvalues) - 0.1 * diff(range(na.omit(data)$xvalues)), max(na.omit(data)$xvalues) + 0.1* diff(range(na.omit(data)$xvalues)))) +
+     scale_fill_manual(values=c("#7bbda2","#ee875c","#97a4d0","#1678b5"))+
+     theme_bw() +
+     theme_remove_all +
+     coord_flip() +
+     theme(plot.margin= unit(c(0, 0.5, 0.5, 0), "lines"))
+
+  p3 <- ggplot(na.omit(data), aes(x = factor(subtype), y = gene)) +
+     geom_boxplot(aes(x=factor(subtype),y=gene,fill=factor(subtype)),width = .8, outlier.colour = NA) +
+     geom_beeswarm(size=1)+
+     stat_compare_means(comparisons=list(c("DS_PBS","DS_VPA")))+
+     # geom_jitter(pch = 20, size = 1, colour = "red", alpha = .3,position = position_jitter(width = 0.15, height = 0.15)) +
+     scale_y_continuous(expand = c(0, 2)) +
+     # expand_limits(y = c(-0.75, 10.75))  +
+     expand_limits(y = c(min(na.omit(data)$gene) - 0.1 * diff(range(na.omit(data)$gene)), max(na.omit(data)$gene) + 0.1 * diff(range(na.omit(data)$gene)))) +
+     scale_fill_manual(values=c("#7bbda2","#ee875c","#97a4d0","#1678b5"))+
      theme_bw() +
      theme_remove_all +
      theme(plot.margin= unit(c(0, 0.5, 0.5, 0), "lines"))
@@ -66,12 +73,12 @@ plotScatterBoxplot <- function(data,coefficient,Q){
   gt3 <- ggplot_gtable(ggplot_build(p3))
   # Get maximum widths and heights for x-axis and y-axis title and text
   maxWidth = unit.pmax(gt1$widths[2:3], gt2$widths[2:3])
-  maxHeight = unit.pmax(gt1$heights[7:8], gt3$heights[7:8])
+  maxHeight = unit.pmax(gt1$heights[4:5], gt3$heights[4:5])
   # Set the maximums in the gtables for gt1, gt2 and gt3
   gt1$widths[2:3] <- as.list(maxWidth)
   gt2$widths[2:3] <- as.list(maxWidth)
-  gt1$heights[7:8] <- as.list(maxHeight)
-  gt3$heights[7:8] <- as.list(maxHeight)
+  gt1$heights[4:5] <- as.list(maxHeight)
+  gt3$heights[4:5] <- as.list(maxHeight)
   # Combine the scatterplot with the two marginal boxplots
   # Create a new gtable
   gt <- gtable(widths = unit(c(7, 1), "null"), height = unit(c(1, 7), "null"))
@@ -82,9 +89,6 @@ plotScatterBoxplot <- function(data,coefficient,Q){
 
   # grid.newpage()
   grid.draw(gt)
-
-  grid.rect(x = 0.5, y = 0.5, height = 0.995, width = 0.995, default.units = "npc",
-    gp = gpar(col = "black", fill = NA, lwd = 1))
 }
 
 
